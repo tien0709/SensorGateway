@@ -5,6 +5,11 @@
 /build/
 /out/
 
+**/Debug/
+**/Release/
+**/build/
+**/out/
+
 
 # === STM32CubeMX generated temporary files ===
 *.ioc-backup
@@ -27,6 +32,7 @@
 *.cproject
 
 /.settings/
+**/.settings/
 *.launch
 *.swn
 *.d
