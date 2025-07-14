@@ -58,6 +58,7 @@
 # === dóc ===
 *.pdf
 
+
 # === Optional ===
 # Ignore generated HAL/LL drivers if using custom versions
 # /Drivers/STM32F4xx_HAL_Driver/
