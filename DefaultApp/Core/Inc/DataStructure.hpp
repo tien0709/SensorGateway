@@ -1,7 +1,8 @@
 #ifndef INC_DATASTRUCTURE_HPP_
 #define INC_DATASTRUCTURE_HPP_
 
-
+#include<vector>
+#include<string>
 enum class SensorType {
 	TEMPERATURE,
 	HUMIDITY,
@@ -41,7 +42,7 @@ struct LogMessage{
 	std::string message;
 	std::string module;
 
-    LogMessage() : level(LogLevel::INFO), timestamp(0) {}
+    LogMessage() : level(LogLevel::info), timestamp(0) {}
     LogMessage(LogLevel l, const std::string& msg, const std::string& mod)
         : level(l), timestamp(HAL_GetTick()), message(msg), module(mod) {}
 };
@@ -59,12 +60,12 @@ struct SystemStatus{
 	SystemState state;
 	uint32_t upTime;
 	uint32_t freeHeap;
-	uint32_t totalSensor;
-	uint32_t activeSensor;
+	uint32_t totalSensors;
+	uint32_t activeSensors;
 	uint32_t errorCount;
 	float cpuUsage;
 
-	 SystemStatus() : state(SystemState::IDLE), uptime(0), freeHeap(0),
+	 SystemStatus() : state(SystemState::IDLE), upTime(0), freeHeap(0),
 	                    totalSensors(0), activeSensors(0), errorCount(0), cpuUsage(0.0f) {}
 };
 

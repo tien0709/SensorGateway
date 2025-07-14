@@ -20,7 +20,8 @@ private:
 	osSemaphoreId logMutex;
 	UART_HandleTypeDef* huart;
 	osMessageQId logQueue;
-//	static SystemLogger* instance;
+	static SystemLogger* instance;//singleton parten=>> assure only one SystemLogger existing in system
+	//and can access from everywhere
 	TaskHandle_t loggerTaskHandle;
 
 	void loggerTask(void* parameter);
@@ -28,7 +29,7 @@ private:
 	std::string formatLogMessage(const LogMessage& msg);
 public:
 	SystemLogger(TaskHandle_t loggerTaskHandle, UART_HandleTypeDef* huart);
-//	static SystemLogger* getInstance();
+	static SystemLogger* getInstance();
 	void init(UART_HandleTypeDef* uart, TaskHandle_t loggerTaskHandle);
 	void log(LogLevel level, const std::string& message, const std::string& module = "SYSTEM");
 };

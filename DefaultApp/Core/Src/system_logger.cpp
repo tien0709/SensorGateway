@@ -1,5 +1,35 @@
 #include <system_logger.hpp>
 
+SystemLogger::SystemLogger(){
+
+	instance = nullptr;
+
+	//initial Uart handle
+	this->huart = nullptr;
+
+
+	//initial Mesage queue handle
+	osMessageQDef(logQueueDef, 10, char*);
+	this->logQueue = osMessageCreate(osMessageQ(logQueueDef), NULL);
+
+	//initial binary semaphore handle
+	osSemaphoreDef(logMutexDef);
+	this->logMutex = osSemaphoreCreate(osSemaphore(logMutexDef), 1);
+}
+
+SystemLogger* SystemLogger:: getInstance(){
+	if(this->instance == NULL){
+		instance = new SystemLogger();
+	} return instance;
+}
+
+void SystemLogger::init(UART_HandleTypeDef* uart, 	TaskHandle_t loggerTaskHandle){
+	this->huart = uart;
+
+	this->loggerTaskHandle = loggerTaskHandle;
+
+    osThreadCreate(this->loggerTaskHandle, nullptr);
+}
 
 void SystemLogger::loggerTask(void* parameter){
    // Logger* logger = static_cast<Logger*>(parameter);
@@ -8,7 +38,7 @@ void SystemLogger::loggerTask(void* parameter){
 	while (true) {
 		osEvent evt = osMessageGet(this->logQueue, osWaitForever);
 		if (evt.status == osEventMessage) {
-			processLogMessage(evt.value.p);
+			processLogMessage(*((LogMessage*)evt.value.p));
 		}
 	}
 }
@@ -41,32 +71,13 @@ std::string SystemLogger::formatLogMessage(const LogMessage& msg){
     return std::string(buffer);
 }
 
-SystemLogger::SystemLogger(TaskHandle_t loggerTaskHandle, UART_HandleTypeDef* huart){
-	//initial Task
-	this->loggerTaskHandle = loggerTaskHandle;
-
-	//initial Uart handle
-	this->huart = huart;
-
-	//initial Mesage queue handle
-	osMessageQDef(logQueueDef, 10, char*);
-	this->logQueue = osMessageCreate(osMessageQ(logQueueDef), NULL);
-
-	//initial binary semaphore handle
-	osSemaphoreDef(logMutexDef);
-	this->logMutex = osSemaphoreCreate(osSemaphore(logMutexDef), 1);
-}
-//	static SystemLogger::Logger* getInstance(){
-//		if(this->instance == NULL){
-//			instance = new Logger();
-//		} return instance;
-//	}
-void SystemLogger::init(UART_HandleTypeDef* uart, TaskHandle_t loggerTaskHandle){
-	this->huart = uart;
-	this->loggerTaskHandle = loggerTaskHandle;
-}
 void SystemLogger::log(LogLevel level, const std::string& message, const std::string& module){
 	LogMessage mgs(level, message, module);
+
+	osStatus status = osMessagePut(this->logQueue, (uint32_t)&mgs, osWaitForever);
+	if (status != osOK) {
+	    // asuming queue always not full
+	}
 }
 
 

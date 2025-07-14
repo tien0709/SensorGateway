@@ -17,15 +17,14 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <cli_manager.hpp>
-#include <sensor_manager.hpp>
-#include <system_logger.hpp>
 #include "main.h"
 #include "cmsis_os.h"
 #include "usb_host.h"
+#include "application.hpp"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,15 +50,15 @@ I2S_HandleTypeDef hi2s3;
 
 SPI_HandleTypeDef hspi1;
 
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 osThreadId sensorTaskHandle;
 osThreadId CLITaskHandle;
 osThreadId loggerTaskHandle;
 /* USER CODE BEGIN PV */
-CLIManager cli_mng;
-SensorManager sensor_mng;
-
+// Global application instance
+std::unique_ptr<Application> app;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,6 +70,7 @@ static void MX_I2S2_Init(void);
 static void MX_I2S3_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_USART1_UART_Init(void);
 void StartSensorTask(void const * argument);
 void StartCLITask(void const * argument);
 void StartLoggerTask(void const * argument);
@@ -81,7 +81,33 @@ void StartLoggerTask(void const * argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+extern "C" void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
+    // Handle stack overflow
+    while(1) {
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); // Toggle LED
+        HAL_Delay(100);
+    }
+}
 
+extern "C" void vApplicationMallocFailedHook(void) {
+    // Handle malloc failure
+    while(1) {
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+        HAL_Delay(50);
+    }
+}
+
+// UART interrupt callbacks
+extern "C" void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+    static uint8_t rxData[1];
+
+    if (app) {
+        app->handleUARTInterrupt(huart, rxData, 1);
+    }
+
+    // Continue receiving
+    HAL_UART_Receive_IT(huart, rxData, 1);
+}
 /* USER CODE END 0 */
 
 /**
@@ -101,8 +127,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  sensor_mng.init();
-  cli_mng.init();
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -122,8 +147,16 @@ int main(void)
   MX_I2S3_Init();
   MX_SPI1_Init();
   MX_USART2_UART_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  app = std::make_unique<Application>(&hspi1, &huart2, &huart3);
 
+   // Initialize and start application
+   app->init();
+   app->run();
+
+   uint8_t rxData[1];
+   HAL_UART_Receive_IT(&huart2, rxData, 1);
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -381,6 +414,39 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -520,8 +586,7 @@ void StartSensorTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	sensor_mng.run();
-    osDelay(500);
+    osDelay(1);
   }
   /* USER CODE END 5 */
 }
@@ -539,8 +604,7 @@ void StartCLITask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-		cli_mng.run();
-	    osDelay(500);
+    osDelay(1);
   }
   /* USER CODE END StartCLITask */
 }
