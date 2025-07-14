@@ -3,7 +3,7 @@
 ## 📖 Overview
 
 This project is a reference embedded software system designed for STM32F411 microcontroller using C++ and FreeRTOS, STM32 HAL. It includes a bootloader and a main application with features suitable for an embedded gateway. The architecture supports future extension with debug modes, factory reset, and protocol expansion (CAN, UART, SPI, I2C).
----
+
 
 ## 🧠 Features
 
