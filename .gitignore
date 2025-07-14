@@ -61,11 +61,14 @@
 
 # === Optional ===
 # Ignore generated HAL/LL drivers if using custom versions
-# /Drivers/STM32F4xx_HAL_Driver/
-# /Drivers/CMSIS/
+**/Drivers/
+**/Middlewares/
+**/USB_Device/
+**/USB_Host/
+**/Core/Startup/
 
-# Ignore Cube-generated middleware if not modified
-# /Middlewares/
+Ignore Cube-generated middleware if not modified
+**/Middlewares/
 
 # === Python test scripts (nếu bạn thêm test automation) ===
 __pycache__/
