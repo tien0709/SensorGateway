@@ -149,7 +149,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  app = std::make_unique<Application>(&hspi1, &huart2, &huart3);
+  app = std::make_unique<Application>(&hspi1, &huart1, &huart2);
 
    // Initialize and start application
    app->init();

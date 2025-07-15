@@ -18,18 +18,11 @@ SystemLogger::SystemLogger(){
 }
 
 SystemLogger* SystemLogger:: getInstance(){
-	if(this->instance == NULL){
+	if(instance == NULL){
 		instance = new SystemLogger();
 	} return instance;
 }
 
-void SystemLogger::init(UART_HandleTypeDef* uart, 	TaskHandle_t loggerTaskHandle){
-	this->huart = uart;
-
-	this->loggerTaskHandle = loggerTaskHandle;
-
-    osThreadCreate(this->loggerTaskHandle, nullptr);
-}
 
 void SystemLogger::loggerTask(void* parameter){
    // Logger* logger = static_cast<Logger*>(parameter);
@@ -42,6 +35,17 @@ void SystemLogger::loggerTask(void* parameter){
 		}
 	}
 }
+
+void SystemLogger::init(UART_HandleTypeDef* uart, 	osThreadId loggerTaskHandle){
+	this->huart = uart;
+
+	this->loggerTaskHandle = loggerTaskHandle;
+
+	osThreadDef(loggerThreadDef, loggerTask, osPriorityNormal, 0, 128);
+	this->loggerTaskHandle = osThreadCreate(osThread(loggerThreadDef), NULL);
+
+}
+
 
 void SystemLogger::processLogMessage(const LogMessage& message){
 	if(huart == NULL) return;

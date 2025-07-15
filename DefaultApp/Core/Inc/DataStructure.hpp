@@ -14,7 +14,8 @@ enum class LogLevel {
 	debug,
 	info,
 	warning,
-	error
+	error,
+	critical
 };
 
 enum class SystemState{

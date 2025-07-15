@@ -1,6 +1,7 @@
 #ifndef INC_SENSOR_MANAGER_HPP_
 #define INC_SENSOR_MANAGER_HPP_
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -9,7 +10,6 @@ extern "C" {
 }
 #endif
 
-#include "cmsis_os.h"
 #include "DataStructure.hpp"
 #include "system_logger.hpp"
 #include "IObserver.hpp"
@@ -38,7 +38,7 @@ class ISensor{
 
 class SPISensor: public ISensor{
 protected:
-	SPI_HandleTypeDef hspi;
+	SPI_HandleTypeDef* hspi;
 	GPIO_TypeDef* csPort;
 	uint8_t csPin;
 public:
@@ -51,21 +51,21 @@ protected:
 
 	HAL_StatusTypeDef spiTransmit(uint8_t* data, uint16_t size, uint32_t timeout = 1000) {
 		selectSensor();
-		HAL_StatusTypeDef status = HAL_SPI_Transmit(&hspi, data, size, timeout);
+		HAL_StatusTypeDef status = HAL_SPI_Transmit(hspi, data, size, timeout);
 		deselectSensor();
 		return status;
 	}
 
 	HAL_StatusTypeDef spiReceive(uint8_t* data, uint16_t size, uint32_t timeout = 1000) {
 		selectSensor();
-		HAL_StatusTypeDef status = HAL_SPI_Receive(&hspi, data, size, timeout);
+		HAL_StatusTypeDef status = HAL_SPI_Receive(hspi, data, size, timeout);
 		deselectSensor();
 		return status;
 	}
 
 	HAL_StatusTypeDef spiTransmitReceive(uint8_t* txData, uint8_t* rxData, uint16_t size, uint32_t timeout = 1000) {
 		selectSensor();
-		HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(&hspi, txData, rxData, size, timeout);
+		HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(hspi, txData, rxData, size, timeout);
 		deselectSensor();
 		return status;
 	}

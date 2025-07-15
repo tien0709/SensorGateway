@@ -22,15 +22,16 @@ private:
 	osMessageQId logQueue;
 	static SystemLogger* instance;//singleton parten=>> assure only one SystemLogger existing in system
 	//and can access from everywhere
-	TaskHandle_t loggerTaskHandle;
+	osThreadId loggerTaskHandle;
 
 	void loggerTask(void* parameter);
 	void processLogMessage(const LogMessage& message);
 	std::string formatLogMessage(const LogMessage& msg);
 public:
-	SystemLogger(TaskHandle_t loggerTaskHandle, UART_HandleTypeDef* huart);
+	SystemLogger();
+	SystemLogger(osThreadId loggerTaskHandle, UART_HandleTypeDef* huart);
 	static SystemLogger* getInstance();
-	void init(UART_HandleTypeDef* uart, TaskHandle_t loggerTaskHandle);
+	void init(UART_HandleTypeDef* uart, osThreadId loggerTaskHandle);
 	void log(LogLevel level, const std::string& message, const std::string& module = "SYSTEM");
 };
 
