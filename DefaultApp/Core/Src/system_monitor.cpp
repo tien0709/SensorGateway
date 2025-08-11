@@ -3,29 +3,25 @@
 SystemMonitor::SystemMonitor(SensorManager* sensorMgr, CLIManager* cliMgr)
     : sensorManager(sensorMgr), cliManager(cliMgr), errorCount(0),
       lastHeartbeat(0), systemHealthy(true) {
-    systemMutex = xSemaphoreCreateMutex();
+	osMutexDef(myMutex);
+    systemMutex = osMutexCreate(osMutex(myMutex));
     logger = SystemLogger::getInstance();
 }
 
 SystemMonitor::~SystemMonitor() {
     stop();
-    vSemaphoreDelete(systemMutex);
+    osMutexDelete(systemMutex);
 }
-
-void StartWatchdogTask(void* argument){
-
-}
-void WatchdogTimerCallback(void const *argument);
 
 void SystemMonitor::init() {
 
     // Create watchdog timer (5 second timeout)
-    osTimerDef(watchdogTaskDef,  WatchdogTimerCallback);
-    watchdogTimer = osTimerCreate(osThread(watchdogTaskDef), osTimerPeriodic, nullptr);
+    osTimerDef(watchdogTimerDef,  watchdogTimerCallback);
+    watchdogTimer = osTimerCreate(osTimer(watchdogTimerDef), osTimerPeriodic, this);
 
     // Create watchdog task
-    osThreadDef(watchdogTaskDef, StartWatchdogTask, osPriorityNormal, 1, 512);
-    watchdogTaskHandle = osThreadCreate(osThread(watchdogTaskDef), nullptr);
+    osThreadDef(watchdogTaskDef, watchdogTask, osPriorityNormal, 1, 512);
+    watchdogTaskHandle = osThreadCreate(osThread(watchdogTaskDef), this);
 
 
 
@@ -56,8 +52,8 @@ void SystemMonitor::reportError(const std::string& error) {
     }
 }
 
-void SystemMonitor::watchdogTask(void* parameter) {
-    SystemMonitor* monitor = static_cast<SystemMonitor*>(parameter);
+void SystemMonitor::watchdogTask(const void* parameter) {
+    SystemMonitor* monitor = static_cast<SystemMonitor*>(const_cast<void*>(parameter));
 
     while (true) {
         monitor->checkSystemHealth();
@@ -65,8 +61,8 @@ void SystemMonitor::watchdogTask(void* parameter) {
     }
 }
 
-void SystemMonitor::watchdogTimerCallback(TimerHandle_t xTimer) {
-    SystemMonitor* monitor = static_cast<SystemMonitor*>(pvTimerGetTimerID(xTimer));
+void SystemMonitor::watchdogTimerCallback(const void* parameter) {
+	SystemMonitor* monitor = static_cast<SystemMonitor*>(const_cast<void*>(parameter));
 
     uint32_t currentTime = HAL_GetTick();
     if (currentTime - monitor->lastHeartbeat > 10000) { // 10 second timeout

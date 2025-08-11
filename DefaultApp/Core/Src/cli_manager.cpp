@@ -24,11 +24,10 @@ CLIManager::CLIManager(UART_HandleTypeDef* uart, SensorManager* sensorMgr)
 }
 
 CLIManager::~CLIManager() {
-    vQueueDelete(cliCommandQueue);
-    vSemaphoreDelete(cliMutex);
+    osMessageDelete(cliCommandQueue);
+    osMutexDelete(cliMutex);
 }
 
-void StartCLITask(void const *argument);
 void CLIManager::init() {
     // Register default commands
     registerCommand("help", std::make_unique<HelpCommand>(this));
@@ -37,8 +36,8 @@ void CLIManager::init() {
     registerCommand("sensors", std::make_unique<SensorsCommand>(sensorManager));
 
     // Create CLI task
-    osThreadDef(cliTaskDef, StartCLITask, osPriorityNormal, 1, 512);
-    cliTaskId = osThreadCreate(osThread(cliTaskDef), nullptr);
+    osThreadDef(cliTaskDef, cliTask, osPriorityNormal, 1, 512);
+    cliTaskId = osThreadCreate(osThread(cliTaskDef), this);
 
     // Send welcome message
     sendResponse("STM32F411 Sensor Gateway v1.0\r\nType 'help' for available commands.\r\n> ");
@@ -53,8 +52,8 @@ void CLIManager::registerCommand(const std::string& name, std::unique_ptr<ICLICo
     }
 }
 
-void CLIManager::cliTask(void* parameter) {
-    CLIManager* cliManager = static_cast<CLIManager*>(parameter);
+void CLIManager::cliTask(const void* parameter) {
+    CLIManager* cliManager = static_cast<CLIManager*>(const_cast<void*>(parameter));
     CLICommand cmd;
 
     while (true) {

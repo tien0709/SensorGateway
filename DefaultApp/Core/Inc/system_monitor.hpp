@@ -24,9 +24,9 @@ extern "C" {
 
 class SystemMonitor {
 private:
-    TaskHandle_t watchdogTaskHandle;
-    SemaphoreHandle_t systemMutex;
-    TimerHandle_t watchdogTimer;
+    osThreadId watchdogTaskHandle;
+    osMutexId systemMutex;
+    osTimerId watchdogTimer;// monitor status of system, reset system when failing
 
     SensorManager* sensorManager;
     CLIManager* cliManager;
@@ -34,10 +34,11 @@ private:
 
     uint32_t errorCount;
     uint32_t lastHeartbeat;
-    bool systemHealthy;
 
-    static void watchdogTask(void* parameter);
-    static void watchdogTimerCallback(TimerHandle_t xTimer);
+    bool systemHealthy;//status of system
+
+    static void watchdogTask(const void* parameter);
+    static void watchdogTimerCallback(const void* parameter);
 
     void checkSystemHealth();
     void handleSystemError();

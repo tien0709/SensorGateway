@@ -4,7 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "stm32f4xx_hal_uart.h"
+#include "stm32f4xx_hal.h"
 #include "cmsis_os.h"
 #ifdef __cplusplus
 }
@@ -24,14 +24,14 @@ private:
 	//and can access from everywhere
 	osThreadId loggerTaskHandle;
 
-	void loggerTask(void* parameter);
+	static void loggerTask(const void* parameter);//must be static for task of thread
 	void processLogMessage(const LogMessage& message);
 	std::string formatLogMessage(const LogMessage& msg);
 public:
 	SystemLogger();
-	SystemLogger(osThreadId loggerTaskHandle, UART_HandleTypeDef* huart);
+	SystemLogger(UART_HandleTypeDef* huart);
 	static SystemLogger* getInstance();
-	void init(UART_HandleTypeDef* uart, osThreadId loggerTaskHandle);
+	void init(UART_HandleTypeDef* uart);
 	void log(LogLevel level, const std::string& message, const std::string& module = "SYSTEM");
 };
 

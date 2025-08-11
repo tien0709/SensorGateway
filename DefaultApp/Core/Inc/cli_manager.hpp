@@ -4,7 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "stm32f4xx_hal_uart.h"
+#include "stm32f4xx_hal.h"
 #ifdef __cplusplus
 }
 #endif
@@ -37,7 +37,7 @@ private:
     std::string inputBuffer;
     static const size_t MAX_INPUT_LENGTH = 256;
 
-    static void cliTask(void* parameter);
+    static void cliTask(const void* parameter);
     void processCommand(const std::string& commandLine);
     std::vector<std::string> parseCommand(const std::string& commandLine);
     void sendResponse(const std::string& response);
@@ -95,7 +95,7 @@ public:
                 status.freeHeap,
                 status.activeSensors,
                 status.totalSensors,
-                status.errorCount,
+                (int)status.errorCount,
                 status.cpuUsage);
         return std::string(buffer);
     }

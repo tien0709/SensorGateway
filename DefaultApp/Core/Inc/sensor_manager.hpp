@@ -5,7 +5,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "stm32f4xx_hal_spi.h"
+#include "stm32f4xx_hal.h"
 #ifdef __cplusplus
 }
 #endif
@@ -39,6 +39,7 @@ class ISensor{
 class SPISensor: public ISensor{
 protected:
 	SPI_HandleTypeDef* hspi;
+	UART_HandleTypeDef* huart;
 	GPIO_TypeDef* csPort;
 	uint8_t csPin;
 public:
@@ -49,26 +50,11 @@ protected:
 	void selectSensor() { HAL_GPIO_WritePin(csPort, csPin, GPIO_PIN_RESET); }
 	void deselectSensor() { HAL_GPIO_WritePin(csPort, csPin, GPIO_PIN_SET); }
 
-	HAL_StatusTypeDef spiTransmit(uint8_t* data, uint16_t size, uint32_t timeout = 1000) {
-		selectSensor();
-		HAL_StatusTypeDef status = HAL_SPI_Transmit(hspi, data, size, timeout);
-		deselectSensor();
-		return status;
-	}
+	HAL_StatusTypeDef spiTransmit(uint8_t* data, uint16_t size, uint32_t timeout = 1000) ;
 
-	HAL_StatusTypeDef spiReceive(uint8_t* data, uint16_t size, uint32_t timeout = 1000) {
-		selectSensor();
-		HAL_StatusTypeDef status = HAL_SPI_Receive(hspi, data, size, timeout);
-		deselectSensor();
-		return status;
-	}
+	HAL_StatusTypeDef spiReceive(uint8_t* data, uint16_t size, uint32_t timeout = 1000) ;
 
-	HAL_StatusTypeDef spiTransmitReceive(uint8_t* txData, uint8_t* rxData, uint16_t size, uint32_t timeout = 1000) {
-		selectSensor();
-		HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(hspi, txData, rxData, size, timeout);
-		deselectSensor();
-		return status;
-	}
+	HAL_StatusTypeDef spiTransmitReceive(uint8_t* txData, uint8_t* rxData, uint16_t size, uint32_t timeout = 1000) ;
 };
 
 class TemperatureSensor : public SPISensor {
@@ -76,42 +62,15 @@ public:
     TemperatureSensor(uint8_t id, SPI_HandleTypeDef* spi, GPIO_TypeDef* port, uint16_t pin)
         : SPISensor(id, SensorType::TEMPERATURE, spi, port, pin) {}
 
-    bool init() override {
-        // Initialize temperature sensor
-        uint8_t config = 0x01;
-        if (spiTransmit(&config, 1) == HAL_OK) {
-            isActive = true;
-            SystemLogger::getInstance()->log(LogLevel::info, "Temperature sensor initialized", "TEMP_SENSOR");
-            return true;
-        }
-        SystemLogger::getInstance()->log(LogLevel::error, "Temperature sensor initialization failed", "TEMP_SENSOR");
-        return false;
-    }
+    bool init() override ;
 
-    SensorData readData() override {
-        if (!isActive) return SensorData();
+    SensorData readData() override ;
 
-        uint8_t data[2];
-        if (spiReceive(data, 2) == HAL_OK) {
-            float temperature = ((data[0] << 8) | data[1]) * 0.0625f; // Example conversion
-            lastReadTime = HAL_GetTick();
-            return SensorData(SensorType::TEMPERATURE, lastReadTime, temperature, sensorId);
-        }
+    bool selfTest() override ;
 
-        SystemLogger::getInstance()->log(LogLevel::error, "Temperature sensor read failed", "TEMP_SENSOR");
-        return SensorData();
-    }
-
-    bool selfTest() override {
-        // Implement self-test logic
-        return isActive;
-    }
-
-    void reset() override {
-        isActive = false;
-        init();
-    }
+    void reset() override;
 };
+
 class SensorManager: public Observable<SensorData>{
 
     std::vector<std::unique_ptr<ISensor>> sensors;

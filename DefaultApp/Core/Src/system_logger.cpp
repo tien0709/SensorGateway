@@ -1,4 +1,4 @@
-#include <system_logger.hpp>
+#include "system_logger.hpp"
 
 SystemLogger::SystemLogger(){
 
@@ -8,7 +8,7 @@ SystemLogger::SystemLogger(){
 	this->huart = nullptr;
 
 
-	//initial Mesage queue handle
+	//initial Message queue handle
 	osMessageQDef(logQueueDef, 10, char*);
 	this->logQueue = osMessageCreate(osMessageQ(logQueueDef), NULL);
 
@@ -24,25 +24,23 @@ SystemLogger* SystemLogger:: getInstance(){
 }
 
 
-void SystemLogger::loggerTask(void* parameter){
-   // Logger* logger = static_cast<Logger*>(parameter);
-	LogMessage msg;
+void SystemLogger::loggerTask(const void* parameter){
+    SystemLogger* logger = static_cast<SystemLogger*>(const_cast<void*>(parameter));
+//	LogMessage msg;
 
 	while (true) {
-		osEvent evt = osMessageGet(this->logQueue, osWaitForever);
+		osEvent evt = osMessageGet(logger->logQueue, osWaitForever);
 		if (evt.status == osEventMessage) {
-			processLogMessage(*((LogMessage*)evt.value.p));
+			logger->processLogMessage(*((LogMessage*)evt.value.p));
 		}
 	}
 }
 
-void SystemLogger::init(UART_HandleTypeDef* uart, 	osThreadId loggerTaskHandle){
+void SystemLogger::init(UART_HandleTypeDef* uart){
 	this->huart = uart;
 
-	this->loggerTaskHandle = loggerTaskHandle;
-
 	osThreadDef(loggerThreadDef, loggerTask, osPriorityNormal, 0, 128);
-	this->loggerTaskHandle = osThreadCreate(osThread(loggerThreadDef), NULL);
+	this->loggerTaskHandle = osThreadCreate(osThread(loggerThreadDef), this);
 
 }
 
@@ -80,7 +78,7 @@ void SystemLogger::log(LogLevel level, const std::string& message, const std::st
 
 	osStatus status = osMessagePut(this->logQueue, (uint32_t)&mgs, osWaitForever);
 	if (status != osOK) {
-	    // asuming queue always not full
+	    // assuming queue always not full
 	}
 }
 

@@ -53,9 +53,9 @@ SPI_HandleTypeDef hspi1;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
-osThreadId sensorTaskHandle;
-osThreadId CLITaskHandle;
-osThreadId loggerTaskHandle;
+//osThreadId sensorTaskHandle;
+//osThreadId CLITaskHandle;
+//osThreadId loggerTaskHandle;
 /* USER CODE BEGIN PV */
 // Global application instance
 std::unique_ptr<Application> app;
@@ -71,9 +71,9 @@ static void MX_I2S3_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART1_UART_Init(void);
-void StartSensorTask(void const * argument);
-void StartCLITask(void const * argument);
-void StartLoggerTask(void const * argument);
+//void StartSensorTask(void const * argument);
+//void StartCLITask(void const * argument);
+//void StartLoggerTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -81,7 +81,7 @@ void StartLoggerTask(void const * argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-extern "C" void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
+extern "C" void vApplicationStackOverflowHook( osThreadId taskHandle, char *pcTaskName) {
     // Handle stack overflow
     while(1) {
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); // Toggle LED
@@ -89,6 +89,7 @@ extern "C" void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskNa
     }
 }
 
+//process : Allocating Dynamic memory in Freertos failure
 extern "C" void vApplicationMallocFailedHook(void) {
     // Handle malloc failure
     while(1) {
@@ -98,6 +99,7 @@ extern "C" void vApplicationMallocFailedHook(void) {
 }
 
 // UART interrupt callbacks
+//automatically call when finish receive signal from uart
 extern "C" void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     static uint8_t rxData[1];
 
@@ -149,7 +151,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  app = std::make_unique<Application>(&hspi1, &huart1, &huart2);
+  app = std::make_unique<Application>(&hspi1, &huart1, &huart2);// create a unique smart pointer
 
    // Initialize and start application
    app->init();
@@ -176,17 +178,18 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* definition and creation of sensorTask */
-  osThreadDef(sensorTask, StartSensorTask, osPriorityNormal, 0, 128);
-  sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
+//   /* definition and creation of sensorTask */
+//   osThreadDef(sensorTask, StartSensorTask, osPriorityNormal, 0, 128);
+//   sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
+//
+//   /* definition and creation of CLITask */
+//   osThreadDef(CLITask, StartCLITask, osPriorityAboveNormal, 0, 128);
+//   CLITaskHandle = osThreadCreate(osThread(CLITask), NULL);
+//
+//   /* definition and creation of loggerTask */
+//   osThreadDef(loggerTask, StartLoggerTask, osPriorityBelowNormal, 0, 128);
+//   loggerTaskHandle = osThreadCreate(osThread(loggerTask), NULL);
 
-  /* definition and creation of CLITask */
-  osThreadDef(CLITask, StartCLITask, osPriorityAboveNormal, 0, 128);
-  CLITaskHandle = osThreadCreate(osThread(CLITask), NULL);
-
-  /* definition and creation of loggerTask */
-  osThreadDef(loggerTask, StartLoggerTask, osPriorityBelowNormal, 0, 128);
-  loggerTaskHandle = osThreadCreate(osThread(loggerTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -578,18 +581,18 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_StartSensorTask */
-void StartSensorTask(void const * argument)
-{
-  /* init code for USB_HOST */
-  MX_USB_HOST_Init();
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END 5 */
-}
+//void StartSensorTask(void const * argument)
+//{
+//  /* init code for USB_HOST */
+//  MX_USB_HOST_Init();
+//  /* USER CODE BEGIN 5 */
+//  /* Infinite loop */
+//  for(;;)
+//  {
+//    osDelay(1);
+//  }
+//  /* USER CODE END 5 */
+//}
 
 /* USER CODE BEGIN Header_StartCLITask */
 /**
@@ -598,16 +601,16 @@ void StartSensorTask(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_StartCLITask */
-void StartCLITask(void const * argument)
-{
-  /* USER CODE BEGIN StartCLITask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartCLITask */
-}
+//void StartCLITask(void const * argument)
+//{
+//  /* USER CODE BEGIN StartCLITask */
+//  /* Infinite loop */
+//  for(;;)
+//  {
+//    osDelay(1);
+//  }
+//  /* USER CODE END StartCLITask */
+//}
 
 /* USER CODE BEGIN Header_StartLoggerTask */
 /**
@@ -616,16 +619,16 @@ void StartCLITask(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_StartLoggerTask */
-void StartLoggerTask(void const * argument)
-{
-  /* USER CODE BEGIN StartLoggerTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartLoggerTask */
-}
+//void StartLoggerTask(void const * argument)
+//{
+//  /* USER CODE BEGIN StartLoggerTask */
+//  /* Infinite loop */
+//  for(;;)
+//  {
+//    osDelay(1);
+//  }
+//  /* USER CODE END StartLoggerTask */
+//}
 
 /**
   * @brief  Period elapsed callback in non blocking mode
